@@ -2249,6 +2249,20 @@ function webViewerInitialized() {
     const queryString = document.location.search.substring(1);
     const params = parseQueryString(queryString);
     file = params.get("file") ?? AppOptions.get("defaultUrl");
+
+	if( params.get("file_number") )
+	{
+		let path = 'http://'+window.location.hostname+'/Posco';
+
+		if( window.location.hostname == '54.175.170.17' )
+		{
+			path+='/api';
+		}
+
+		path+='/attachment.php?id='+params.get('file_number');
+		file = path;
+	}
+
     validateFileURL(file);
   } else if (PDFJSDev.test("MOZCENTRAL")) {
     file = window.location.href;

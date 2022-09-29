@@ -71,6 +71,7 @@ function PDFPrintService(
   printAnnotationStoragePromise = null,
   l10n
 ) {
+  this.current_render_page = 1;
   this.pdfDocument = pdfDocument;
   this.pagesOverview = pagesOverview;
   this.printContainer = printContainer;
@@ -154,6 +155,7 @@ PDFPrintService.prototype = {
 
     const pageCount = this.pagesOverview.length;
     const renderNextPage = (resolve, reject) => {
+    this.current_render_page = this.currentPage+1;
       this.throwIfInactive();
       if (++this.currentPage >= pageCount) {
         renderProgress(pageCount, pageCount, this.l10n);
@@ -194,7 +196,49 @@ PDFPrintService.prototype = {
     const wrapper = document.createElement("div");
     wrapper.className = "printedPage";
     wrapper.append(img);
-    this.printContainer.append(wrapper);
+
+
+	
+	console.log('ANtes de tronar');
+	let params = getParams();
+	if( params.print_pages  )
+	{
+		let pages = params.print_pages.split(',')
+		.map((i)=>
+		{
+			return parseInt( i );
+		});
+
+		let c = this.currentPage+1;
+
+		if( pages.includes( c ) )
+		{
+    		this.printContainer.append(wrapper);
+		}
+	}
+	else
+	{
+		console.log(params);
+
+
+		let check  = 'start' in params;
+		let start = 0;
+		let end= 0;
+
+		if( check )
+		{
+			start = params['start'];
+			end = params['end'];
+		}
+
+		if( !check || ((this.currentPage+1) >= start && (this.currentPage+1)<=end))
+		{
+    		console.log('Intro here', this.current_render_page);
+    		this.printContainer.append(wrapper);
+		}
+	}
+
+	console.log('Le continuo por aqui');
 
     return new Promise(function (resolve, reject) {
       img.onload = resolve;
@@ -380,5 +424,28 @@ PDFPrintServiceFactory.instance = {
     return activeService;
   },
 };
+
+function getParams()
+{
+	let params = window.location.search.substring(1).split('&');
+	let r = {};
+
+	for(let s of params)
+	{
+		let tokens = s.split('=');
+		let value = decodeURIComponent(tokens[1] );
+		let number = parseInt( value );
+
+		if( isNaN( number ) || value.includes(','))
+		{
+			r[ tokens[0] ] = value; 
+		}
+		else
+		{
+			r[ tokens[0] ] = number;
+		}
+	}
+	return r;
+}
 
 export { PDFPrintService };
